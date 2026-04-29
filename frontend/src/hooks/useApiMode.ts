@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ApiMode } from "@/types";
 import { STORAGE_KEYS } from "@/lib/constants";
 
@@ -12,14 +12,9 @@ function readStoredMode(): ApiMode {
 
 export function useApiMode() {
   const [mode, setModeState] = useState<ApiMode>(readStoredMode);
-  const prevModeRef = useRef<ApiMode | null>(null);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.apiMode, mode);
-    if (prevModeRef.current !== null && prevModeRef.current !== mode) {
-      localStorage.removeItem(STORAGE_KEYS.accessToken);
-    }
-    prevModeRef.current = mode;
   }, [mode]);
 
   const setMode = useCallback((next: ApiMode) => {

@@ -16,9 +16,15 @@ export default function Header({ variant = "auth", onLogout }: Props) {
           </h1>
           <p className="text-sm text-slate-400">Güvenlik laboratuvarı — Hacker vs Defender</p>
         </div>
-        <nav className="flex shrink-0 gap-3 text-sm">
+        <nav className="flex shrink-0 flex-wrap items-center justify-end gap-3 text-sm">
           {variant === "dashboard" ? (
             <>
+              <Link
+                to={ROUTES.dashboard}
+                className="rounded-lg bg-fortress-accent/90 px-3 py-1.5 font-medium text-fortress-950 transition hover:bg-sky-300"
+              >
+                Dashboard
+              </Link>
               {onLogout ? (
                 <button
                   type="button"
@@ -37,12 +43,9 @@ export default function Header({ variant = "auth", onLogout }: Props) {
               )}
             </>
           ) : (
-            <Link
-              to={ROUTES.dashboard}
-              className="rounded-lg bg-fortress-accent/90 px-3 py-1.5 font-medium text-fortress-950 transition hover:bg-sky-300"
-            >
-              Dashboard
-            </Link>
+            <span className="rounded-lg border border-slate-600/80 bg-fortress-950/50 px-3 py-1.5 font-medium text-slate-200">
+              Giriş / Kayıt
+            </span>
           )}
         </nav>
       </div>

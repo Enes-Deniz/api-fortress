@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { postJson } from "@/services/http";
+import { postJson, getSecureApiBase } from "@/services/http";
 import type { RegisterRequestBody, RegisterResponseBody } from "@/types";
 import AuthAlert from "@/components/auth/AuthAlert";
 
 type Props = {
-  baseUrl: string;
   layout?: "standalone" | "tabbed";
 };
 
-export default function RegisterForm({ baseUrl, layout = "standalone" }: Props) {
+export default function RegisterForm({ layout = "standalone" }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,6 +19,7 @@ export default function RegisterForm({ baseUrl, layout = "standalone" }: Props) 
     setError(null);
     setSuccess(null);
     setLoading(true);
+    const baseUrl = getSecureApiBase();
     try {
       const body: RegisterRequestBody = { email: email.trim(), password };
       const data = await postJson<RegisterResponseBody>(baseUrl, "/auth/register", body);
@@ -48,6 +48,7 @@ export default function RegisterForm({ baseUrl, layout = "standalone" }: Props) 
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Kayıt</h3>
           <p className="mt-1 text-xs text-slate-500">
             <code className="rounded bg-fortress-950 px-1 py-0.5">POST /auth/register</code>
+            <span className="block text-slate-600">Secure API (platform hesabı)</span>
           </p>
         </>
       ) : (
@@ -56,6 +57,7 @@ export default function RegisterForm({ baseUrl, layout = "standalone" }: Props) 
           <code className="rounded-md bg-black/35 px-2 py-0.5 font-mono text-[11px] text-slate-300">
             POST /auth/register
           </code>
+          <span className="block pt-1 text-slate-600">Secure API — platform hesabı</span>
         </p>
       )}
 
