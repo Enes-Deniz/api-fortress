@@ -9,6 +9,9 @@ services:
     environment:
       FLASK_APP: services.api_insecure.app:app
       PYTHONPATH: /app
+      DATABASE_URL: sqlite:////app/instance/app.db
+    volumes:
+      - ./data/insecure:/app/instance
     command: flask run --host=0.0.0.0 --port=5001
 
   api_secure:
@@ -21,6 +24,9 @@ services:
     environment:
       FLASK_APP: services.api_secure.app:app
       PYTHONPATH: /app
+      DATABASE_URL: sqlite:////app/instance/app.db
+    volumes:
+      - ./data/secure:/app/instance
     command: flask run --host=0.0.0.0 --port=5002
 
   frontend:

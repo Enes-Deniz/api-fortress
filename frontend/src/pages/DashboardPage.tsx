@@ -12,6 +12,7 @@ import {
   readAccessToken,
   clearAccessToken,
 } from "@/lib/constants";
+import { markTaskCompleted, readCompletedTaskIds } from "@/lib/progress";
 import type { CtfTask, HealthResponse, UserMeResponse } from "@/types";
 
 export default function DashboardPage() {
@@ -21,6 +22,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<CtfTask | null>(null);
+  const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
+  const userProgressKey = user?.email || (user ? String(user.id) : null);
+
 
   const [insecureHealth, setInsecureHealth] = useState<HealthResponse | null>(null);
   const [secureHealth, setSecureHealth] = useState<HealthResponse | null>(null);
@@ -33,6 +37,15 @@ export default function DashboardPage() {
     navigate(ROUTES.auth, { replace: true });
   }, [navigate]);
 
+  const handleTaskCompleted = useCallback((taskId: string) => {
+    if (!userProgressKey) return;
+    setCompletedTaskIds(markTaskCompleted(userProgressKey, taskId));
+  }, [userProgressKey]);
+
+  useEffect(() => {
+    setCompletedTaskIds(readCompletedTaskIds(userProgressKey));
+  }, [userProgressKey]);
+
   useEffect(() => {
     const token = readAccessToken();
     if (!token) {
@@ -40,13 +53,20 @@ export default function DashboardPage() {
       return;
     }
 
+    const platformApiBase = getSecureApiBase();
+
     let cancelled = false;
     setLoading(true);
     setError(null);
 
-    getJson<UserMeResponse>(baseUrl, "/users/me", { token })
+    getJson<UserMeResponse>(platformApiBase, "/users/me", { token })
       .then((data) => {
-        if (!cancelled) setUser(data);
+        if (!cancelled) {
+          setUser({
+            ...data,
+            is_admin: Boolean(data.is_admin),
+          });
+        }
       })
       .catch((err) => {
         if (cancelled) return;
@@ -66,7 +86,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [baseUrl, mode, navigate]);
+  }, [navigate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,7 +132,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header variant="dashboard" onLogout={handleLogout} />
+      <Header variant="dashboard" onLogout={handleLogout} isAdmin={Boolean(user?.is_admin)} />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-4 py-10 sm:px-6">
         <header className="border-b border-slate-800/80 pb-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-fortress-accent">
@@ -142,9 +162,15 @@ export default function DashboardPage() {
 
         <ApiModeSwitch mode={mode} onChange={setMode} baseUrl={baseUrl} />
 
-        <CtfTaskGrid onSelectTask={setSelectedTask} />
+        <CtfTaskGrid completedTaskIds={completedTaskIds} onSelectTask={setSelectedTask} />
 
-        <CtfTaskDetailModal task={selectedTask} mode={mode} onClose={() => setSelectedTask(null)} />
+        <CtfTaskDetailModal
+          task={selectedTask}
+          mode={mode}
+          baseUrl={baseUrl}
+          onClose={() => setSelectedTask(null)}
+          onTaskCompleted={handleTaskCompleted}
+        />
       </main>
     </div>
   );

@@ -12,7 +12,7 @@ def me():
     if not u:
         return jsonify({"error": "unauthorized"}), 401
 
-    return jsonify({"id": u.id, "email": u.email})
+    return jsonify({"id": u.id, "email": u.email, "is_admin": bool(u.is_admin)})
 
 
 @users_bp.get("/<int:user_id>")

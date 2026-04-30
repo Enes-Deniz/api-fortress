@@ -26,6 +26,7 @@ frontend/.env.*
 !frontend/.env.example
 
 # SQLite / local DB
+data/
 *.db
 
 # IDE

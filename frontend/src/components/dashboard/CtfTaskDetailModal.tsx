@@ -1,10 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ApiMode, CtfTask } from "@/types";
+import AttackConsole from "@/components/dashboard/AttackConsole";
 
 type Props = {
   task: CtfTask | null;
   mode: ApiMode;
+  baseUrl: string;
   onClose: () => void;
+  onTaskCompleted?: (taskId: string) => void;
 };
 
 function LabSection({
@@ -37,8 +40,9 @@ function LabSection({
   );
 }
 
-export default function CtfTaskDetailModal({ task, mode, onClose }: Props) {
+export default function CtfTaskDetailModal({ task, mode, baseUrl, onClose, onTaskCompleted }: Props) {
   const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const [showAttackConsole, setShowAttackConsole] = useState(false);
 
   useEffect(() => {
     if (!task) return;
@@ -49,6 +53,10 @@ export default function CtfTaskDetailModal({ task, mode, onClose }: Props) {
     closeBtnRef.current?.focus();
     return () => window.removeEventListener("keydown", onKey);
   }, [task, onClose]);
+
+  useEffect(() => {
+    setShowAttackConsole(false);
+  }, [task?.id]);
 
   if (!task) return null;
 
@@ -182,9 +190,24 @@ export default function CtfTaskDetailModal({ task, mode, onClose }: Props) {
             </div>
           </div>
 
-          <p className="text-center text-xs text-slate-500">
-            Bu görev eğitim amaçlıdır; üretim sistemlerinde denenmemelidir.
-          </p>
+          <div className="border-t border-slate-800/80 pt-5">
+            <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                onClick={() => setShowAttackConsole((v) => !v)}
+                className="w-full rounded-xl bg-fortress-accent px-4 py-3 text-sm font-semibold text-fortress-950 shadow-md transition hover:bg-sky-300 sm:w-auto"
+              >
+                {showAttackConsole ? "Konsolu gizle" : "Hadi Başlayalım"}
+              </button>
+              <p className="text-center text-xs text-slate-500 sm:text-right">
+                Bu görev eğitim amaçlıdır; üretim sistemlerinde denenmemelidir.
+              </p>
+            </div>
+
+            {showAttackConsole ? (
+              <AttackConsole task={task} mode={mode} baseUrl={baseUrl} onTaskCompleted={onTaskCompleted} />
+            ) : null}
+          </div>
         </div>
       </div>
     </div>

@@ -60,6 +60,7 @@ export interface ApiErrorBody {
 export interface UserMeResponse {
   id: number;
   email: string;
+  is_admin?: boolean;
 }
 
 /** GET /health yanıtı */

@@ -1,6 +1,7 @@
 export const ROUTES = {
   auth: "/auth",
   dashboard: "/dashboard",
+  admin: "/admin",
 } as const;
 
 export const STORAGE_KEYS = {
