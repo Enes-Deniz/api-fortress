@@ -17,6 +17,7 @@ dist
 venv
 
 # Local DB & secrets (do not bake into images)
+data/
 *.db
 .env
 frontend/.env

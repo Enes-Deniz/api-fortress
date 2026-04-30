@@ -4,11 +4,7 @@ import RegisterForm from "@/components/auth/RegisterForm";
 
 type Tab = "login" | "register";
 
-type Props = {
-  baseUrl: string;
-};
-
-export default function AuthTabs({ baseUrl }: Props) {
+export default function AuthTabs() {
   const [tab, setTab] = useState<Tab>("login");
 
   return (
@@ -48,9 +44,9 @@ export default function AuthTabs({ baseUrl }: Props) {
 
       <div className="p-6 sm:p-8" role="tabpanel">
         {tab === "login" ? (
-          <LoginForm baseUrl={baseUrl} layout="tabbed" />
+          <LoginForm layout="tabbed" />
         ) : (
-          <RegisterForm baseUrl={baseUrl} layout="tabbed" />
+          <RegisterForm layout="tabbed" />
         )}
       </div>
     </div>

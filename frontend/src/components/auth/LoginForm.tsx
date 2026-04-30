@@ -1,16 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { postJson } from "@/services/http";
+import { postJson, getSecureApiBase } from "@/services/http";
 import { ROUTES, STORAGE_KEYS } from "@/lib/constants";
 import type { LoginRequestBody, LoginResponseBody } from "@/types";
 import AuthAlert from "@/components/auth/AuthAlert";
 
 type Props = {
-  baseUrl: string;
   layout?: "standalone" | "tabbed";
 };
 
-export default function LoginForm({ baseUrl, layout = "standalone" }: Props) {
+export default function LoginForm({ layout = "standalone" }: Props) {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,6 +20,7 @@ export default function LoginForm({ baseUrl, layout = "standalone" }: Props) {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    const baseUrl = getSecureApiBase();
     try {
       const body: LoginRequestBody = { email: email.trim(), password };
       const data = await postJson<LoginResponseBody>(baseUrl, "/auth/login", body);
@@ -52,6 +52,7 @@ export default function LoginForm({ baseUrl, layout = "standalone" }: Props) {
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Giriş</h3>
           <p className="mt-1 text-xs text-slate-500">
             <code className="rounded bg-fortress-950 px-1 py-0.5">POST /auth/login</code>
+            <span className="block text-slate-600">Secure API (platform oturumu)</span>
           </p>
         </>
       ) : (
@@ -60,6 +61,7 @@ export default function LoginForm({ baseUrl, layout = "standalone" }: Props) {
           <code className="rounded-md bg-black/35 px-2 py-0.5 font-mono text-[11px] text-slate-300">
             POST /auth/login
           </code>
+          <span className="block pt-1 text-slate-600">Secure API — platform oturumu</span>
         </p>
       )}
 
