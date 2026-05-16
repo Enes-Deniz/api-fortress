@@ -1,0 +1,64 @@
+\section{Ek-1: Kod Gösterimi}
+\label{ek1}
+
+\subsection{app.py -- Güvenli API Başlangıç Noktası}
+
+\begin{lstlisting}
+from flask import Flask
+from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from dotenv import load_dotenv
+from common.db import db
+from routes_auth import auth_bp
+from routes_users import users_bp
+from routes_items import items_bp
+import os
+
+load_dotenv()
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+
+CORS(app, origins=['http://localhost:3000'])
+limiter = Limiter(key_func=get_remote_address, app=app,
+                  default_limits=['200 per day', '50 per hour'])
+
+db.init_app(app)
+app.register_blueprint(auth_bp, url_prefix='/api/auth')
+app.register_blueprint(users_bp, url_prefix='/api/users')
+app.register_blueprint(items_bp, url_prefix='/api/items')
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(host='0.0.0.0', port=5001, debug=False)
+\end{lstlisting}
+
+\subsection{models.py -- Kullanıcı Modeli}
+
+\begin{lstlisting}
+from common.db import db
+from datetime import datetime
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id         = db.Column(db.Integer, primary_key=True)
+    username   = db.Column(db.String(80), unique=True, nullable=False)
+    email      = db.Column(db.String(120), unique=True, nullable=False)
+    password   = db.Column(db.String(255), nullable=False)
+    role       = db.Column(db.String(20), default='user')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'role': self.role,
+            'created_at': self.created_at.isoformat()
+        }
+\end{lstlisting}
+
+\clearpage

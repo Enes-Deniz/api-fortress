@@ -1,0 +1,84 @@
+\section{TEST SÜRECİ VE CTF SENARYOLARI}
+\label{bolum9}
+
+\subsection{Test Stratejisi}
+\label{test-stratejisi}
+
+API Fortress sisteminin geliştirme sürecinin ardından hem Vulnerable API hem de Secure API ortamı üzerinde çeşitli güvenlik ve işlevsellik testleri gerçekleştirilmiştir. Testlerin temel amacı, güvensiz ortamda oluşturulan zafiyetlerin kontrollü şekilde sömürülebilir olduğunu doğrulamak ve güvenli ortamda geliştirilen savunma mekanizmalarının doğru çalıştığını göstermektir.
+
+\subsubsection{Test sürecinde üç temel yöntem kullanılmıştır:}
+
+\begin{itemize}[leftmargin=*]
+    \item Postman koleksiyonları
+    \item curl komutları
+    \item Python tabanlı otomatik test betikleri
+\end{itemize}
+
+Postman kullanılarak kullanıcı kayıt işlemleri, giriş süreçleri, JWT token doğrulamaları, CRUD işlemleri ve saldırı senaryoları manuel olarak test edilmiştir. SQL Injection, XSS, IDOR/BOLA ve Mass Assignment gibi saldırılar için özel request koleksiyonları hazırlanmıştır. Böylece aynı test senaryoları tekrar çalıştırılarak güvenli ve güvensiz ortamlar karşılaştırılmıştır.
+
+curl komutları özellikle terminal üzerinden hızlı endpoint testleri gerçekleştirmek amacıyla kullanılmıştır. Authorization header kontrolleri, token doğrulama süreçleri ve rate limiting davranışları curl üzerinden analiz edilmiştir. Özellikle brute force testlerinde kısa süre içerisinde çok sayıda login isteği gönderilerek sistemin rate limiting mekanizması doğrulanmıştır.
+
+Python test betikleri ise daha otomatik saldırı senaryoları için geliştirilmiştir. Bu betikler sayesinde ardışık kullanıcı ID’leri üzerinde IDOR testleri, otomatik payload denemeleri ve endpoint taramaları yapılmıştır. Ayrıca WAF mekanizmasının zararlı girdilere verdiği tepkiler analiz edilmiştir.
+
+\subsubsection{Vulnerable API ortamında gerçekleştirilen testlerde:}
+
+\begin{itemize}[leftmargin=*]
+    \item Mass Assignment ile admin yetkisi kazanılabildiği,
+    \item Authentication bypass yapılabildiği,
+    \item Yetkisiz veri erişiminin mümkün olduğu,
+    \item Rol kontrolü eksikliklerinin bulunduğu
+\end{itemize}
+
+doğrulanmıştır.
+
+\subsubsection{Secure API ortamında yapılan testlerde ise:}
+
+\begin{itemize}[leftmargin=*]
+    \item JWT doğrulama sisteminin çalıştığı,
+    \item Yetkisiz erişimlerin engellendiği,
+    \item Rate limiting mekanizmasının brute force saldırılarını sınırlandırdığı,
+    \item WAF sisteminin SQL Injection ve XSS payload’larını filtrelediği,
+    \item RBAC yapısının admin işlemlerini koruduğu
+\end{itemize}
+
+gözlemlenmiştir.
+
+Gerçekleştirilen testler sonucunda API Fortress sisteminin hem saldırı senaryolarını uygulamalı olarak gösterebildiği hem de modern savunma mekanizmalarının etkinliğini başarılı şekilde sergileyebildiği doğrulanmıştır.
+
+\subsection{Zafiyet Testleri}
+\label{zafiyet-testleri}
+
+Her zafiyet senaryosu için iki aşamalı test yapılmıştır: (1) Güvensiz ortamda saldırının başarılı olduğunun doğrulanması, (2) Güvenli ortamda aynı saldırının engellendiğinin doğrulanması.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{3.0cm}|L{3.0cm}|L{3.0cm}|L{3.0cm}|}
+\hline
+\textbf{Senaryo} & \textbf{Saldırı Tekniği} & \textbf{Güvensiz Sonuç} & \textbf{Güvenli Sonuç} \\
+\hline
+Mass Assignment & role: admin ile kayıt & Admin yetkisi kazanıldı (evet) & HTTP 400 -- engellendi (evet) \\
+\hline
+Broken Auth & X-Admin-Override header & Token olmadan giriş (evet) & HTTP 401 -- engellendi (evet) \\
+\hline
+IDOR / BOLA & Farklı user\_id sorgusu & Başka kullanıcı verisi (evet) & HTTP 403 -- engellendi (evet) \\
+\hline
+BFLA & Normal kullanıcı ile DELETE & Kullanıcı silindi (evet) & HTTP 403 -- engellendi (evet) \\
+\hline
+Brute Force & 100 istek / dakika & Sınırsız deneme (evet) & HTTP 429 -- engellendi (evet) \\
+\hline
+SQL Injection & OR 1=1 payload & Veri sızdırıldı (evet) & WAF engelledi (evet) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Test Sonuçları}
+\label{test-sonu-lar}
+
+Gerçekleştirilen testler sonucunda Vulnerable API ortamında oluşturulan tüm temel güvenlik açıklarının başarıyla sömürülebildiği doğrulanmıştır. Mass Assignment, Broken Authentication, IDOR/BOLA ve Broken Function Level Authorization senaryolarında saldırganın yetkisiz erişim elde edebildiği, kullanıcı rollerini manipüle edebildiği ve farklı kullanıcılara ait verilere erişebildiği gözlemlenmiştir. Bu sonuçlar, güvenlik kontrollerinin eksik bırakıldığı REST API sistemlerinde oluşabilecek riskleri uygulamalı olarak göstermiştir.
+
+Secure API ortamında ise geliştirilen savunma mekanizmalarının saldırıları büyük ölçüde engellediği görülmüştür. JWT tabanlı kimlik doğrulama sistemi sayesinde yetkisiz kullanıcı erişimleri engellenmiş, RBAC mekanizması ile kritik işlemler yalnızca yetkili kullanıcılarla sınırlandırılmıştır. Ayrıca rate limiting sistemi brute force giriş denemelerini sınırlandırırken, WAF filtreleme mekanizması standart SQL Injection ve XSS payload’larını başarılı şekilde tespit ederek zararlı istekleri engellemiştir. Özellikle authorization kontrolleri, request filtering yapıları ve rate limiting mekanizmalarının sistem güvenliğini önemli ölçüde artırdığı gözlemlenmiştir.
+
+Test sürecinde tespit edilen önemli bir kısmi yetersizlik ise regex tabanlı WAF kurallarının yalnızca standart saldırı payload’larını hedef almasıdır. URL-encoded, Base64 encoded veya farklı obfuscation teknikleri kullanılarak gizlenen bazı payload’ların mevcut filtreleme mekanizmasını aşabileceği görülmüştür. Bu durum, regex tabanlı temel WAF sistemlerinin gelişmiş saldırılara karşı tek başına yeterli olmadığını göstermektedir. Bu nedenle gelecekteki sürümlerde çok katmanlı filtreleme mekanizmaları, gelişmiş payload normalizasyonu ve davranış tabanlı saldırı analizi gibi ek güvenlik önlemlerinin sisteme entegre edilmesi planlanmaktadır.
+
+
+\clearpage

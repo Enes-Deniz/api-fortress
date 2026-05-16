@@ -1,0 +1,127 @@
+\section{UYGULAMA GELİŞTİRME SÜRECİ}
+\label{bolum8}
+
+\subsection{Geliştirme Ortamı}
+\label{geli-tirme-ortam}
+
+Proje geliştirme sürecinde kullanılan teknoloji yığını aşağıdaki tabloda özetlenmektedir:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{3.5cm}|L{3.5cm}|}
+\hline
+\textbf{Teknoloji} & \textbf{Detay} \\
+\hline
+Programlama Dili & Python 3.11 \\
+\hline
+Web Framework & Flask 3.x \\
+\hline
+ORM & SQLAlchemy 2.x \\
+\hline
+Veritabanı & SQLite (geliştirme) / PostgreSQL (üretim) \\
+\hline
+Kimlik Doğrulama & PyJWT \\
+\hline
+Parola Hashleme & Flask-Bcrypt \\
+\hline
+Rate Limiting & Flask-Limiter \\
+\hline
+Ortam Yönetimi & python-dotenv \\
+\hline
+Konteyner & Docker \& Docker Compose \\
+\hline
+Test Araçları & Postman, curl, Python requests \\
+\hline
+Versiyon Kontrolü & Git \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Docker Konteyner Yapısı}
+\label{docker-konteyner-yap-s}
+
+API Fortress sisteminin farklı platformlarda kolayca çalıştırılabilmesi amacıyla Docker tabanlı konteyner mimarisi tercih edilmiştir. Bu yapı sayesinde sistem bileşenleri izole şekilde çalıştırılmakta ve laboratuvar ortamının taşınabilirliği artırılmaktadır. Böylece geliştirme, test ve dağıtım süreçleri daha yönetilebilir hale getirilmektedir.
+
+\begin{lstlisting}
+# docker-compose.yml
+version: '3.8'
+services:
+  insecure_api:
+    build: ./insecure_api
+    ports:
+      - '5000:5000'
+    environment:
+      - FLASK_ENV=development
+
+  secure_api:
+    build: ./secure_api
+    ports:
+      - '5001:5001'
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+\end{lstlisting}
+
+Güvenli ortamda SECRET\_KEY ve DATABASE\_URL gibi hassas bilgiler .env dosyası üzerinden environment variable olarak yönetilmektedir. Bu yaklaşım, gizli bilgilerin kaynak kod içine gömülmesini engelleyen kritik bir güvenlik önlemidir.
+
+\subsection{Kod Organizasyonu}
+\label{kod-organizasyonu}
+
+API Fortress projesinde kod organizasyonu, sistemin okunabilirliğini, sürdürülebilirliğini ve genişletilebilirliğini artırmak amacıyla modüler bir yapıda tasarlanmıştır. Kod tabanı; kimlik doğrulama, kullanıcı yönetimi ve öğe yönetimi gibi özellik alanlarına göre ayrıştırılmıştır. Bu sayede her modül kendi sorumluluk alanına sahip olmuş, tek bir dosya içerisinde karmaşık ve yönetilmesi zor bir backend yapısı oluşması engellenmiştir.
+
+Projede temel olarak şu modüler ayrım uygulanmıştır:
+
+\begin{verbatim}
+routes_auth.py   → Kayıt, giriş ve token işlemleri
+routes_users.py  → Kullanıcı listeleme, detay, silme ve yetki işlemleri
+routes_items.py  → CRUD işlemleri ve veri yönetimi
+models.py        → Veritabanı model tanımları
+db.py            → SQLAlchemy veritabanı bağlantısı
+config.py        → Ortam değişkenleri ve yapılandırma ayarları
+\end{verbatim}
+
+Bu yapı sayesinde authentication işlemleri kullanıcı yönetiminden, kullanıcı yönetimi de öğe yönetiminden ayrılmıştır. Örneğin giriş ve kayıt işlemlerinde bir değişiklik yapılmak istendiğinde yalnızca routes\_auth.py dosyası üzerinde çalışmak yeterli olur. Kullanıcı listeleme veya silme gibi işlemler routes\_users.py içerisinde, CRUD işlemleri ise routes\_items.py içerisinde yönetilir. Bu ayrım, kodun bakımını kolaylaştırır ve hata ayıklama sürecini daha kontrollü hale getirir.
+
+Kod tabanı yalnızca dosyalara ayrılmakla kalmamış; aynı zamanda denetleyici, servis ve veri erişim mantığı açısından da düzenli bir yapıda ele alınmıştır. Denetleyici katmanı yani route dosyaları, istemciden gelen HTTP isteklerini karşılayan bölümdür. Bu katman gelen isteği alır, gerekli güvenlik kontrollerini çağırır, veritabanı işlemlerini başlatır ve sonucu JSON formatında istemciye döndürür.
+
+Servis mantığı ise uygulamanın iş kurallarını temsil eder. Örneğin kullanıcı oluşturulurken rol bilgisinin backend tarafından atanması, parola hashleme işleminin yapılması, token üretimi veya yetki kontrolü gibi işlemler bu iş mantığının parçasıdır. Veri erişim katmanı ise SQLAlchemy modelleri ve veritabanı bağlantısı üzerinden yürütülür. Böylece sistemde HTTP isteği alma, iş kuralı uygulama ve veritabanı işlemi yapma görevleri birbirinden ayrılmıştır.
+
+Her iki API ortamı da, yani güvenli ve güvensiz backend yapıları, benzer klasör ve dosya organizasyonunu paylaşmaktadır. Bu tercih bilinçli olarak yapılmıştır. Çünkü projenin temel amacı, aynı REST API işlevlerinin güvenli ve güvensiz uygulamalarını karşılaştırmalı biçimde gösterebilmektir. Kullanıcılar insecure\_api klasöründeki bir endpoint ile secure\_api klasöründeki karşılığını inceleyerek güvenlik mekanizmalarının kod seviyesinde nasıl fark oluşturduğunu görebilmektedir.
+
+Örneğin güvensiz ortamda kayıt işlemi gelen tüm JSON verilerini doğrudan modele aktarırken, güvenli ortamda yalnızca izin verilen alanlar alınır ve rol bilgisi sunucu tarafından sabitlenir. Benzer şekilde güvensiz kullanıcı silme endpoint’inde rol kontrolü bulunmazken, güvenli ortamda bu işlem yalnızca admin yetkisine sahip kullanıcılar tarafından gerçekleştirilebilir. Bu paralel dosya yapısı, saldırı ve savunma farkının doğrudan kod üzerinden anlaşılmasını kolaylaştırır.
+
+Projede Flask Blueprint mimarisi kullanılmıştır. Blueprint yapısı, Flask uygulamalarında route’ların modüler şekilde organize edilmesini sağlar. Bu sayede tüm endpoint’lerin tek bir app.py dosyasında toplanması yerine, işlevlerine göre ayrı dosyalara bölünmesi mümkün hale gelmiştir. app.py dosyası uygulamanın başlangıç noktası olarak görev yapar ve ilgili Blueprint modüllerini uygulamaya kaydeder. Böylece ana uygulama dosyası sade kalır, endpoint yönetimi ise ilgili modüllerde yapılır.
+
+Bu yaklaşımın projeye sağladığı başlıca avantajlar şunlardır:
+
+\begin{itemize}[leftmargin=*]
+    \item Kod okunabilirliği artar.
+    \item Hata ayıklama daha kolay hale gelir.
+    \item Yeni endpoint eklemek kolaylaşır.
+    \item Güvenli ve güvensiz ortamlar karşılaştırmalı incelenebilir.
+    \item Her dosya yalnızca kendi sorumluluğuna odaklanır.
+    \item Güvenlik senaryoları sisteme daha kolay eklenir.
+    \item Proje büyüdüğünde kod karmaşası azalır.
+\end{itemize}
+
+Kod organizasyonunun bir diğer önemli parçası common klasörüdür. Bu klasör, her iki API ortamı tarafından ortak kullanılan bileşenleri içerir. Veritabanı bağlantısı, model tanımları ve yapılandırma ayarları ortak klasör altında tutulduğu için kod tekrarının önüne geçilmiştir. Böylece hem güvenli hem de güvensiz API ortamları aynı veri modelleri üzerinden çalışabilmekte ve karşılaştırmalı analiz daha tutarlı hale gelmektedir.
+
+CORS yapılandırması da kod organizasyonunda önemli bir yer tutmaktadır. CORS (Cross-Origin Resource Sharing), farklı kaynaklardan gelen istemci isteklerinin API’ye erişip erişemeyeceğini belirleyen bir tarayıcı güvenlik mekanizmasıdır. Projede Flask-CORS kütüphanesi kullanılarak CORS ayarları yapılandırılmıştır. Bu sayede farklı portta veya farklı domain üzerinde çalışan frontend uygulamalarının backend API’ye kontrollü şekilde erişebilmesi sağlanmıştır.
+
+Örneğin frontend uygulaması localhost:3000 üzerinde, Flask backend ise localhost:5000 üzerinde çalışıyorsa tarayıcı normalde bu isteği cross-origin olarak değerlendirir. Flask-CORS yapılandırması sayesinde bu iletişim izinli hale getirilir. Böylece frontend ile backend arasındaki REST API haberleşmesi sorunsuz biçimde gerçekleştirilebilir.
+
+Güvensiz API ortamında CORS ayarları daha geniş tutulabilir. Bu durum eğitim amacıyla yanlış yapılandırılmış CORS politikalarının potansiyel risklerini göstermek için kullanılabilir. Güvenli API ortamında ise CORS izin verilen kaynak listesi sınırlandırılmıştır. Böylece yalnızca güvenilir frontend adreslerinin API’ye erişmesine izin verilir. Bu yaklaşım, üretim ortamlarında uygulanması gereken daha güvenli CORS politikasını temsil etmektedir.
+
+\subsubsection{Güvenli CORS yapılandırmasının amacı şudur:}
+
+\begin{itemize}[leftmargin=*]
+    \item Her kaynaktan gelen isteği kabul etmemek,
+    \item API erişimini güvenilir domainlerle sınırlandırmak,
+    \item Yetkisiz frontend kaynaklarından gelen istekleri azaltmak,
+    \item Tarayıcı tabanlı güvenlik risklerini düşürmek.
+\end{itemize}
+
+Sonuç olarak API Fortress projesinde kod organizasyonu; modülerlik, karşılaştırılabilirlik ve güvenli geliştirme prensipleri dikkate alınarak tasarlanmıştır. Flask Blueprint yapısı sayesinde route dosyaları işlevlerine göre ayrılmış, ortak bileşenler common klasöründe toplanmış, güvenli ve güvensiz API ortamları paralel dosya yapısıyla düzenlenmiş ve CORS yapılandırması güvenli ortamda sınırlandırılmıştır. Bu yapı, projenin hem eğitim amaçlı incelenmesini kolaylaştırmakta hem de modern backend geliştirme standartlarına uygun bir mimari sunmaktadır.
+
+
+\clearpage

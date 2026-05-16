@@ -1,0 +1,301 @@
+\section{GÜVENLİ API ORTAMI VE SAVUNMA MEKANİZMALARI}
+\label{bolum7}
+
+API Fortress sistemi içerisinde geliştirilen Secure API ortamı, Vulnerable API ortamında bulunan güvenlik açıklarının modern savunma mekanizmaları kullanılarak engellenmesini amaçlamaktadır. Bu yapı sayesinde kullanıcıların yalnızca saldırı tekniklerini öğrenmesi değil, aynı zamanda güvenli backend sistemlerinin nasıl geliştirildiğini uygulamalı olarak inceleyebilmesi hedeflenmiştir.
+
+Secure API ortamı, gerçek dünya REST API güvenlik prensiplerine uygun şekilde tasarlanmıştır. Sistem içerisinde kimlik doğrulama, yetkilendirme, saldırı filtreleme, rate limiting, parola güvenliği ve veri doğrulama mekanizmaları uygulanmıştır. Böylece kullanıcılar, güvenlik önlemlerinin backend mimarisi üzerindeki etkisini doğrudan analiz edebilmektedir.
+
+Bu ortamın temel amacı yalnızca saldırıları engellemek değil; aynı zamanda modern güvenlik katmanlarının neden gerekli olduğunu ve eksik güvenlik kontrollerinin hangi risklere yol açtığını uygulamalı olarak göstermektir.
+
+\subsection{JWT Tabanlı Kimlik Doğrulama}
+\label{jwt-tabanl-kimlik-do-rulama}
+
+Secure API ortamında kullanılan temel güvenlik mekanizmalarından biri JWT (JSON Web Token) tabanlı kimlik doğrulama sistemidir. JWT yapısı modern REST API mimarilerinde yaygın olarak kullanılan stateless authentication yaklaşımını temsil etmektedir.
+
+Geleneksel oturum tabanlı sistemlerde kullanıcı oturum bilgileri sunucu belleğinde tutulurken, JWT yaklaşımında kullanıcı bilgileri imzalanmış bir token içerisinde taşınmaktadır. Bu yöntem sayesinde backend sistemi daha ölçeklenebilir hale gelmekte ve dağıtık sistem mimarilerine daha uygun bir yapı oluşmaktadır.
+
+Kullanıcı sisteme başarılı şekilde giriş yaptığında backend tarafından imzalanmış bir JWT token oluşturulmaktadır. Bu token içerisinde genellikle:
+
+\begin{itemize}[leftmargin=*]
+    \item kullanıcı ID bilgisi,
+    \item kullanıcı rolü,
+    \item token oluşturma zamanı,
+    \item token geçerlilik süresi
+\end{itemize}
+
+gibi bilgiler bulunmaktadır.
+
+İstemci sonraki isteklerde bu token’ı HTTP Authorization header’ı içerisinde göndermektedir:
+
+\begin{lstlisting}
+Authorization: Bearer <token>
+\end{lstlisting}
+
+Sunucu tarafında token doğrulama işlemleri aşağıdaki dekoratör yapısıyla gerçekleştirilmektedir. Bu yapı sayesinde sistem: token var mı kontrol eder, token imzasını doğrular, token süresinin dolup dolmadığını analiz eder, token içerisindeki kullanıcı bilgisini doğrular, geçersiz token’ları reddeder.
+
+\subsubsection{JWT doğrulama mekanizması sayesinde:}
+
+\begin{itemize}[leftmargin=*]
+    \item yetkisiz erişimler engellenmekte,
+    \item kullanıcı kimliği doğrulanmakta,
+    \item güvenli endpoint erişimi sağlanmaktadır.
+\end{itemize}
+
+Ayrıca token süresinin kontrol edilmesi sayesinde eski veya çalınmış token’ların süresiz kullanılmasının önüne geçilmektedir.
+
+\subsubsection{Bu mekanizma özellikle:}
+
+\begin{itemize}[leftmargin=*]
+    \item kullanıcı yönetim sistemleri,
+    \item mobil uygulama backend’leri,
+    \item mikro servis mimarileri,
+    \item bulut tabanlı API sistemleri
+\end{itemize}
+
+gibi modern sistemlerde yaygın olarak kullanılmaktadır.
+
+\subsection{Rol Tabanlı Yetkilendirme (RBAC)}
+\label{rol-tabanl-yetkilendirme-rbac}
+
+Secure API ortamında uygulanan bir diğer önemli savunma mekanizması RBAC (Role-Based Access Control) sistemidir.
+
+Rol tabanlı yetkilendirme yapısının temel amacı, kullanıcıların yalnızca sahip oldukları yetkiler doğrultusunda işlem yapabilmesini sağlamaktır. Böylece kritik işlemlerin yalnızca yetkili kullanıcılar tarafından gerçekleştirilmesi mümkün olmaktadır.
+
+Sistem içerisinde temel olarak iki farklı kullanıcı rolü bulunmaktadır:
+
+\begin{itemize}[leftmargin=*]
+    \item user
+    \item admin
+\end{itemize}
+
+Her rol farklı erişim seviyelerine sahiptir.
+
+\subsubsection{Örneğin:}
+
+\begin{itemize}[leftmargin=*]
+    \item normal kullanıcılar yalnızca kendi işlemlerini gerçekleştirebilir,
+    \item admin kullanıcılar kullanıcı yönetimi gibi kritik işlemlere erişebilir.
+\end{itemize}
+
+\subsubsection{Bu yapı özellikle:}
+
+\begin{itemize}[leftmargin=*]
+    \item Broken Access Control,
+    \item Broken Function Level Authorization,
+    \item BOLA/IDOR
+\end{itemize}
+
+gibi modern API güvenlik problemlerini önlemek açısından kritik öneme sahiptir.
+
+Mass Assignment zafiyetini engellemek amacıyla istemci tarafından gönderilen kritik alanlar filtrelenmiştir.
+
+\subsubsection{Bu yapıda:}
+
+\begin{itemize}[leftmargin=*]
+    \item istemciden gelen role alanı tamamen yok sayılmaktadır,
+    \item kullanıcı rolü backend tarafından sabit olarak belirlenmektedir,
+    \item kritik güvenlik alanlarının istemci tarafından değiştirilmesi engellenmektedir.
+\end{itemize}
+
+Böylece saldırgan aşağıdaki isteği gönderse bile:
+
+\begin{lstlisting}
+{  "username": "attacker",  "password": "123456",  "role": "admin"}
+\end{lstlisting}
+
+sistem kullanıcıyı yalnızca normal user rolüyle oluşturacaktır.
+
+Bu yaklaşım modern güvenli backend sistemlerinde kullanılan:
+
+\begin{itemize}[leftmargin=*]
+    \item allowlist validation,
+    \item server-side authorization,
+    \item secure object creation
+\end{itemize}
+
+prensiplerini temsil etmektedir.
+
+\subsection{Rate Limiting}
+\label{rate-limiting}
+
+API Fortress sistemi içerisinde brute force ve servis yoğunlaştırma saldırılarına karşı Flask-Limiter kullanılarak rate limiting mekanizması uygulanmıştır.
+
+\subsubsection{Rate limiting mekanizmasının temel amacı:}
+
+\begin{itemize}[leftmargin=*]
+    \item istemcilerin aşırı istek göndermesini engellemek,
+    \item brute force saldırılarını zorlaştırmak,
+    \item sistem kaynaklarını korumak,
+    \item spam istekleri azaltmaktır.
+\end{itemize}
+
+Sistem genelinde varsayılan rate limit kuralları uygulanmıştır:
+
+\begin{lstlisting}
+from flask_limiter import Limiterfrom flask_limiter.util import get_remote_addresslimiter = Limiter(    key_func=get_remote_address,    default_limits=[        '200 per day',        '50 per hour'    ])
+\end{lstlisting}
+
+Bu yapı sayesinde istemcilerin: günlük, saatlik, endpoint bazlı istek sayıları kontrol edilmektedir.
+
+Özellikle login endpoint’inde daha sıkı limit uygulanmıştır:
+
+\begin{lstlisting}
+@auth_bp.route('/login', methods=['POST'])@limiter.limit('5 per minute')def login():    ...
+\end{lstlisting}
+
+Bu yapı sayesinde kullanıcı dakikada yalnızca 5 giriş denemesi yapabilmektedir.
+
+Bu mekanizma: brute force parola saldırılarını, otomatik bot aktivitelerini, credential stuffing saldırılarını önemli ölçüde zorlaştırmaktadır.
+
+\subsubsection{Gerçek dünya sistemlerinde rate limiting:}
+
+\begin{itemize}[leftmargin=*]
+    \item API gateway’lerde,
+    \item CDN katmanlarında,
+    \item load balancer sistemlerinde,
+    \item authentication servislerinde
+\end{itemize}
+
+kritik savunma mekanizmalarından biri olarak kullanılmaktadır.
+
+\subsection{Web Application Firewall (WAF)}
+\label{web-application-firewall-waf}
+
+API Fortress sisteminde zararlı isteklerin filtrelenebilmesi amacıyla regex tabanlı Web Application Firewall (WAF) mekanizması geliştirilmiştir.
+
+\subsubsection{WAF sisteminin temel amacı:}
+
+\begin{itemize}[leftmargin=*]
+    \item zararlı payload’ları analiz etmek,
+    \item şüpheli istekleri filtrelemek,
+    \item injection saldırılarını engellemek,
+    \item istemci verilerini kontrol etmektir.
+\end{itemize}
+
+Sistem içerisinde belirli saldırı pattern’leri tanımlanmıştır:
+
+\begin{lstlisting}
+WAF_PATTERNS = [    r'(\textbackslash{}bor\textbackslash{}s+1=1\textbackslash{}b)',    r'(\textbackslash{}bunion\textbackslash{}b\textbackslash{}s+\textbackslash{}bselect\textbackslash{}b)',    r'(<script\textbackslash{}b)',    r'(\textbackslash{}bdrop\textbackslash{}b\textbackslash{}s+\textbackslash{}btable\textbackslash{}b)',    r'(javascript:)']
+\end{lstlisting}
+
+\subsubsection{Bu pattern’ler:}
+
+\begin{itemize}[leftmargin=*]
+    \item SQL Injection,
+    \item XSS,
+    \item zararlı script içerikleri,
+    \item veri manipülasyon girişimleri
+\end{itemize}
+
+gibi saldırıları tespit etmeye çalışmaktadır.
+
+İstek kontrol mekanizması şu şekilde çalışmaktadır:
+
+\begin{lstlisting}
+def waf_check(data: str) -> bool:    for pattern in WAF_PATTERNS:        if re.search(            pattern,            data,            re.IGNORECASE        ):            return False    return True
+\end{lstlisting}
+
+Sistem:
+
+\begin{enumerate}[leftmargin=*]
+    \item gelen isteği analiz eder,
+    \item pattern listesiyle karşılaştırır,
+    \item şüpheli içerik tespit edilirse isteği reddeder.
+\end{enumerate}
+
+Örneğin aşağıdaki payload’lar engellenebilir:
+
+\begin{lstlisting}
+OR 1=1UNION SELECT<script>alert(1)</script>DROP TABLE usersjavascript:
+\end{lstlisting}
+
+Bu yapı gerçek kurumsal WAF sistemlerinin basitleştirilmiş laboratuvar simülasyonudur.
+
+\subsubsection{Amaç:}
+
+\begin{itemize}[leftmargin=*]
+    \item input filtering mantığını göstermek,
+    \item saldırı tespit süreçlerini öğretmek,
+    \item backend güvenlik katmanlarının çalışma prensibini açıklamaktır.
+\end{itemize}
+
+\subsection{Güvenli Parola Hashleme ve Input Validation}
+\label{g-venli-parola-hashleme-ve-input-validat}
+
+Secure API ortamında kullanıcı parolalarının düz metin olarak saklanması tamamen engellenmiştir. Bunun yerine bcrypt tabanlı parola hashleme mekanizması uygulanmıştır.
+
+\subsubsection{Bcrypt algoritmasının kullanılmasının temel amacı:}
+
+\begin{itemize}[leftmargin=*]
+    \item parola sızıntılarının etkisini azaltmak,
+    \item brute force saldırı maliyetini artırmak,
+    \item rainbow table saldırılarını zorlaştırmaktır.
+\end{itemize}
+
+Kullanıcı kaydı sırasında parola doğrudan veritabanına yazılmaz:
+
+\begin{lstlisting}
+bcrypt.generate_password_hash(    data.get('password'))
+\end{lstlisting}
+
+\subsubsection{Bu işlem sonucunda:}
+
+\begin{itemize}[leftmargin=*]
+    \item geri döndürülemez hash değeri oluşturulur,
+    \item her kullanıcı için farklı salt üretilir,
+    \item parola güvenliği artırılır.
+\end{itemize}
+
+Böylece veritabanı sızdırılsa bile kullanıcı şifreleri doğrudan ele geçirilemez.
+
+Ayrıca sistem içerisinde input validation mekanizmaları uygulanmıştır.
+
+\subsubsection{Bu yapı sayesinde:}
+
+\begin{itemize}[leftmargin=*]
+    \item eksik alanlar,
+    \item geçersiz veri tipleri,
+    \item kısa parolalar,
+    \item hatalı email formatları,
+    \item beklenmeyen veri girişleri
+\end{itemize}
+
+kontrol edilmektedir.
+
+\subsubsection{Örneğin:}
+
+\begin{itemize}[leftmargin=*]
+    \item boş kullanıcı adı,
+    \item geçersiz email,
+    \item 3 karakterlik parola
+\end{itemize}
+
+gibi durumlar sistem tarafından reddedilmektedir.
+
+\subsubsection{Validation mekanizmasının temel amacı:}
+
+\begin{itemize}[leftmargin=*]
+    \item sistem kararlılığını korumak,
+    \item zararlı veri girişlerini azaltmak,
+    \item güvenli veri işleme sağlamak,
+    \item istemci hatalarını yönetmektir.
+\end{itemize}
+
+Ayrıca kullanıcıya anlamlı hata mesajları döndürülmektedir:
+
+\begin{lstlisting}
+{  "error": "Password must be at least 8 characters"}
+\end{lstlisting}
+
+\subsubsection{Bu yaklaşım:}
+
+\begin{itemize}[leftmargin=*]
+    \item kullanıcı deneyimini artırmakta,
+    \item backend hata yönetimini güçlendirmekte,
+    \item veri bütünlüğünü korumaktadır.
+\end{itemize}
+
+Sonuç olarak Secure API ortamı içerisinde uygulanan JWT tabanlı authentication, RBAC yetkilendirme sistemi, rate limiting mekanizması, regex tabanlı WAF yapısı, bcrypt parola hashleme sistemi ve input validation kontrolleri; modern REST API güvenlik prensiplerini uygulamalı biçimde göstermektedir. Bu yapı sayesinde kullanıcılar yalnızca saldırı tekniklerini değil; aynı zamanda güvenli backend mimarisinin nasıl tasarlanması gerektiğini de uygulamalı olarak inceleyebilmektedir.
+
+
+\clearpage

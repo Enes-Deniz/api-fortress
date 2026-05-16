@@ -1,0 +1,362 @@
+\section{SİSTEM TASARIMI VE YAZILIM MİMARİSİ}
+\label{bolum5}
+
+\subsection{Genel Mimari}
+\label{genel-mimari}
+
+API Fortress sistemi, modern REST API güvenlik mekanizmalarının uygulamalı olarak analiz edilebilmesi amacıyla geliştirilmiş modüler bir saldırı ve savunma laboratuvarı olarak tasarlanmıştır. Sistem mimarisi oluşturulurken ölçeklenebilirlik, modülerlik, güvenlik, taşınabilirlik ve sürdürülebilirlik prensipleri dikkate alınmıştır. Proje yalnızca güvenlik açıklarını gösteren basit bir demo uygulaması olarak değil; gerçek dünya backend mimarilerine benzer şekilde çalışan eğitim odaklı bir laboratuvar sistemi olarak geliştirilmiştir.
+
+\subsubsection{Sistem temel olarak üç ana katmandan oluşmaktadır:}
+
+\begin{itemize}[leftmargin=*]
+    \item Backend katmanı
+    \item Güvenlik katmanı
+    \item Veritabanı katmanı
+\end{itemize}
+
+Bu katmanlar Docker konteyner mimarisi içerisinde izole biçimde çalıştırılmakta ve birbirleriyle REST API mantığı üzerinden iletişim kurmaktadır. Böylece sistem hem modüler bir yapıya sahip olmakta hem de farklı geliştirme ortamlarında kolayca çalıştırılabilmektedir.
+
+Sistemin backend geliştirme sürecinde Python programlama dili ve Flask framework’ü kullanılmıştır. Flask’ın hafif ve modüler yapısı sayesinde REST API endpoint’leri kolayca organize edilebilmiş, güvenlik bileşenleri sisteme entegre edilebilmiş ve laboratuvar ortamı daha anlaşılır hale getirilmiştir. Ayrıca Flask Blueprint mimarisi kullanılarak auth, users ve items gibi farklı servisler ayrı modüller halinde yapılandırılmıştır.
+
+Sistemin genel katmanlı mimarisi aşağıdaki yapıdan oluşmaktadır:
+
+Bu mimari yapı sayesinde istemci tarafı ile veritabanı arasında doğrudan bağlantı kurulmadan, tüm işlemler kontrollü backend katmanı üzerinden gerçekleştirilmektedir. Böylece veri güvenliği sağlanmakta ve sistem üzerinde merkezi kontrol mekanizması oluşturulmaktadır.
+
+\subsubsection{İstemci Katmanı}
+
+Sistemin en üst katmanında istemci tarafı yer almaktadır. İstemci; kullanıcıların REST API endpoint’lerine HTTP istekleri gönderebildiği bölümü temsil etmektedir. Bu istemciler bir web arayüzü, Postman, tarayıcı tabanlı REST istemcileri veya komut satırı araçları olabilir. Kullanıcılar sistemdeki saldırı ve savunma senaryolarını bu istemci katmanı üzerinden test etmektedir.
+
+İstemci tarafında gerçekleştirilen temel işlemler şunlardır:
+
+\begin{itemize}[leftmargin=*]
+    \item Kullanıcı kayıt işlemleri
+    \item Kullanıcı giriş işlemleri
+    \item JWT token kullanımı
+    \item Veri listeleme
+    \item Veri oluşturma
+    \item Veri güncelleme
+    \item Veri silme
+    \item Güvenlik açıklarının test edilmesi
+    \item Yetkilendirme kontrollerinin analiz edilmesi
+\end{itemize}
+
+İstemci ile sunucu arasındaki veri iletişimi tamamen HTTP protokolü üzerinden gerçekleştirilmektedir. İstekler REST API mantığına uygun olarak belirli endpoint’lere gönderilmekte ve sunucu tarafından işlenmektedir.
+
+\subsubsection{Flask API Katmanı}
+
+Sistemin merkezinde Flask tabanlı REST API katmanı bulunmaktadır. Bu katman, istemcilerden gelen HTTP isteklerini işleyen ana backend bileşenidir. API katmanı aynı zamanda sistemin iş mantığını (business logic) yönetmekte ve güvenlik kontrollerini uygulamaktadır.
+
+\subsubsection{Flask API katmanının temel görevleri şunlardır:}
+
+\begin{itemize}[leftmargin=*]
+    \item HTTP isteklerini almak
+    \item Endpoint yönlendirmelerini gerçekleştirmek
+    \item Kullanıcı doğrulama işlemlerini yapmak
+    \item JWT token kontrollerini yürütmek
+    \item Yetkilendirme süreçlerini yönetmek
+    \item Veritabanı işlemlerini gerçekleştirmek
+    \item Güvenlik filtrelerini uygulamak
+    \item JSON formatında yanıt döndürmek
+\end{itemize}
+
+Sistem içerisinde Flask Blueprint mimarisi kullanılmıştır. Bu yapı sayesinde API endpoint’leri işlevlerine göre modüllere ayrılmıştır:
+
+\begin{verbatim}
+auth  -> Kimlik dogrulama islemleri
+users -> Kullanici islemleri
+items -> Veri ve saldiri senaryolari
+\end{verbatim}
+
+Bu modüler yapı sayesinde sistem daha okunabilir, sürdürülebilir ve geliştirilebilir hale gelmiştir. Ayrıca güvenli ve güvensiz backend servislerinin yönetimi de kolaylaştırılmıştır.
+
+\subsubsection{Güvenlik Katmanı}
+
+API Fortress sisteminin en önemli bileşenlerinden biri güvenlik katmanıdır. Bu katman modern REST API sistemlerinde kullanılan temel savunma mekanizmalarını uygulamalı olarak göstermektedir.
+
+Güvenlik katmanı içerisinde şu bileşenler bulunmaktadır:
+
+\subsubsection{JWT Authentication}
+
+JWT tabanlı kimlik doğrulama sistemi kullanılarak kullanıcıların korumalı endpoint’lere erişmeden önce doğrulanması sağlanmaktadır. Kullanıcı sisteme giriş yaptıktan sonra backend tarafından imzalanmış bir token üretilmekte ve sonraki isteklerde bu token doğrulanmaktadır.
+
+\subsubsection{Bu yapı sayesinde:}
+
+\begin{itemize}[leftmargin=*]
+    \item Yetkisiz erişimler engellenmekte,
+    \item Stateless authentication sağlanmakta,
+    \item Modern REST API güvenlik mantığı uygulanmaktadır.
+\end{itemize}
+
+\subsubsection{RBAC (Role-Based Access Control)}
+
+Rol tabanlı erişim kontrol sistemi sayesinde kullanıcı ve yönetici yetkileri birbirinden ayrılmıştır.
+
+\subsubsection{Örneğin:}
+
+\begin{itemize}[leftmargin=*]
+    \item Normal kullanıcılar yalnızca kendi işlemlerini gerçekleştirebilir,
+    \item Yönetici kullanıcılar ise sistem yönetim işlemlerine erişebilir.
+\end{itemize}
+
+Bu yapı modern API sistemlerinde sık karşılaşılan Broken Access Control problemlerini önlemeyi amaçlamaktadır.
+
+\subsubsection{Rate Limiting}
+
+Rate limiting mekanizması kullanıcıların belirli süre içerisinde gönderebileceği maksimum istek sayısını sınırlandırmaktadır.
+
+Bu yapı sayesinde: Brute force saldırıları, Spam istekler, Kaynak tüketim saldırıları, Otomatik bot aktiviteleri engellenmeye çalışılmaktadır.
+
+\subsubsection{WAF (Web Application Firewall)}
+
+Regex tabanlı temel WAF sistemi kullanılarak zararlı payload’lar filtrelenmektedir.
+
+\subsubsection{Örneğin:}
+
+\begin{itemize}[leftmargin=*]
+    \item SQL Injection denemeleri
+    \item XSS payload’ları
+    \item Zararlı script içerikleri
+\end{itemize}
+
+tespit edildiğinde sistem isteği reddetmektedir.
+
+Bu yapı güvenli backend sistemlerinde input validation süreçlerinin önemini göstermektedir.
+
+\subsubsection{Veritabanı Katmanı}
+
+Sistemin veri yönetim süreçleri SQLAlchemy ORM katmanı üzerinden gerçekleştirilmektedir. Veritabanı katmanının temel amacı kullanıcı bilgilerini, kimlik doğrulama verilerini ve laboratuvar işlemlerini güvenli şekilde depolamaktır.
+
+Projede SQLite veritabanı kullanılmıştır. SQLite’ın tercih edilme nedenleri şunlardır:
+
+\begin{itemize}[leftmargin=*]
+    \item Hafif yapı sunması
+    \item Kurulum gerektirmemesi
+    \item Eğitim ve laboratuvar ortamları için uygun olması
+    \item Docker içerisinde kolay kullanılabilmesi
+    \item Geliştirme süreçlerini hızlandırması
+\end{itemize}
+
+Veritabanı işlemleri SQLAlchemy ORM üzerinden yürütülmektedir. Böylece veritabanı tabloları Python sınıflarıyla temsil edilmekte ve veri işlemleri nesne yönelimli programlama mantığıyla gerçekleştirilmektedir.
+
+\subsubsection{Örneğin:}
+
+\begin{itemize}[leftmargin=*]
+    \item User modeli kullanıcı tablosunu,
+    \item Item modeli veri nesnelerini temsil etmektedir.
+\end{itemize}
+
+\subsubsection{Bu yaklaşım:}
+
+\begin{itemize}[leftmargin=*]
+    \item Kod okunabilirliğini artırmakta,
+    \item Güvenli sorgu yapıları oluşturmakta,
+    \item Veritabanı yönetimini kolaylaştırmaktadır.
+\end{itemize}
+
+\subsubsection{REST API İletişim Yapısı}
+
+Sistem içerisinde istemci ve sunucu arasındaki veri iletişimi REST API mimarisi üzerinden gerçekleştirilmektedir. İstemciler HTTP istekleri aracılığıyla endpoint’lere erişmekte, sunucu tarafında gerçekleştirilen işlemler sonucunda JSON formatında yanıt döndürülmektedir.
+
+Projede kullanılan temel HTTP metodları şunlardır:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{3.5cm}|L{3.5cm}|}
+\hline
+\textbf{HTTP Metodu} & \textbf{Görev} \\
+\hline
+GET & Veri listeleme veya görüntüleme \\
+\hline
+POST & Yeni veri oluşturma \\
+\hline
+PUT & Var olan veriyi güncelleme \\
+\hline
+DELETE & Veri silme \\
+\hline
+\end{tabular}
+\end{table}
+
+Örneğin kullanıcı giriş işlemi şu akış üzerinden gerçekleşmektedir:
+
+İstemci $\rightarrow$ POST /login $\rightarrow$ Flask API $\rightarrow$ JWT oluşturma $\rightarrow$ JSON Response $\rightarrow$ İstemci
+
+Benzer şekilde korumalı endpoint’lere erişim sırasında sistem JWT doğrulaması gerçekleştirmekte ve kullanıcı yetkilerini kontrol etmektedir.
+
+\subsubsection{Docker Tabanlı Çalışma Ortamı}
+
+API Fortress sistemi Docker konteyner mimarisi kullanılarak çalıştırılmaktadır. Docker kullanımı sayesinde sistemin tüm bağımlılıkları izole şekilde paketlenebilmekte ve farklı geliştirme ortamlarında aynı yapı korunabilmektedir.
+
+\subsubsection{Docker mimarisi sayesinde:}
+
+\begin{itemize}[leftmargin=*]
+    \item Kurulum süreçleri kolaylaşmakta,
+    \item Ortam bağımlılıkları azaltılmakta,
+    \item Laboratuvar tekrar üretilebilir hale gelmekte,
+    \item Güvensiz servisler kontrollü şekilde çalıştırılabilmektedir.
+\end{itemize}
+
+Bu yaklaşım aynı zamanda modern mikro servis mimarilerine benzer bir çalışma mantığı sunmaktadır.
+
+Sonuç olarak API Fortress’in genel mimarisi; modüler Flask backend yapısı, REST API iletişim modeli, güvenlik katmanı, ORM tabanlı veritabanı yönetimi ve Docker konteyner mimarisi üzerine kurulmuştur. Bu yapı sayesinde sistem hem modern backend geliştirme prensiplerini hem de REST API güvenlik mekanizmalarını uygulamalı biçimde gösteren kapsamlı bir saldırı ve savunma laboratuvarı ortamı sunmaktadır.
+
+\subsection{Modüler Backend Yapısı}
+\label{mod-ler-backend-yap-s}
+
+API Fortress projesi, güvenli ve güvensiz REST API ortamlarını birbirinden ayıracak şekilde modüler bir dosya yapısı ile organize edilmiştir. Bu yapı sayesinde proje hem okunabilir hem de sürdürülebilir hale getirilmiştir. Sistem içerisinde iki farklı backend ortamı bulunduğu için dosya organizasyonu özellikle karşılaştırmalı analiz yapılabilecek şekilde tasarlanmıştır.
+
+Projenin temel dosya yapısı aşağıdaki gibidir:
+
+\begin{verbatim}
+api_fortress/
+|-- insecure_api/
+|   |-- app.py
+|   |-- routes_auth.py
+|   |-- routes_users.py
+|   `-- routes_items.py
+|-- secure_api/
+|   |-- app.py
+|   |-- routes_auth.py
+|   |-- routes_users.py
+|   `-- routes_items.py
+|-- common/
+|   |-- config.py
+|   |-- db.py
+|   `-- models.py
+|-- docker-compose.yml
+`-- requirements.txt
+\end{verbatim}
+
+Bu dosya yapısında proje üç ana mantıksal bölüme ayrılmıştır: insecure\_api, secure\_api ve common. Bu ayrım, sistemin saldırı ve savunma taraflarını net biçimde ayırmak için tercih edilmiştir. Böylece kullanıcılar aynı API mantığının güvenli ve güvensiz sürümlerini dosya düzeyinde de karşılaştırabilir.
+
+\subsubsection{insecure\_api Klasörü}
+
+insecure\_api klasörü, kasıtlı olarak güvenlik açıkları içeren REST API ortamını temsil etmektedir. Bu klasördeki backend, eğitim ve test amacıyla savunmasız şekilde tasarlanmıştır. Amaç, kullanıcıların gerçek sistemlerde karşılaşılabilecek API güvenlik açıklarını kontrollü bir ortamda gözlemleyebilmesini sağlamaktır.
+
+Bu ortamda bulunan endpoint’ler temel API işlevlerini yerine getirir; ancak güvenlik kontrolleri bilinçli olarak eksik veya zayıf bırakılmıştır. Örneğin kimlik doğrulama kontrolleri yetersiz olabilir, kullanıcı rolleri yeterince denetlenmeyebilir, input validation işlemleri eksik olabilir veya bazı endpoint’ler zararlı girdilere karşı savunmasız bırakılabilir. Böylece SQL Injection, yetkisiz erişim, zayıf authentication, eksik authorization ve hatalı veri işleme gibi senaryolar test edilebilir.
+
+insecure\_api/app.py dosyası, güvensiz Flask uygulamasının başlangıç noktasıdır. Bu dosyada Flask uygulaması başlatılır, gerekli route dosyaları uygulamaya bağlanır ve API servisi çalışır hale getirilir. Güvensiz ortamda amaç savunma mekanizmalarını minimumda tutarak saldırı senaryolarının etkisini gösterebilmektir.
+
+insecure\_api/routes\_auth.py dosyası kayıt ve giriş endpoint’lerini içerir. Bu bölümde kullanıcıların sisteme kayıt olması ve giriş yapması sağlanır. Ancak bu ortamda authentication mekanizmaları güvenli ortama göre daha zayıf yapılandırılmıştır. Bu durum, kullanıcıların zayıf kimlik doğrulama süreçlerinin nasıl güvenlik açığı oluşturduğunu incelemesine imkân tanır.
+
+insecure\_api/routes\_users.py dosyası kullanıcı yönetimi işlemlerini içerir. Kullanıcı listeleme, kullanıcı detaylarını görüntüleme veya kullanıcı bilgilerini değiştirme gibi işlemler bu dosya üzerinden yürütülür. Güvensiz ortamda bu endpoint’ler üzerinde yeterli rol ve yetki kontrolü bulunmadığında, kullanıcıların yetkisiz verilere erişebilmesi gibi zafiyetler gözlemlenebilir.
+
+insecure\_api/routes\_items.py dosyası ise temel CRUD işlemlerinin bulunduğu bölümdür. Veri oluşturma, listeleme, güncelleme ve silme işlemleri bu modül üzerinden gerçekleştirilir. Bu dosya aynı zamanda injection, eksik doğrulama ve hatalı veri işleme gibi saldırı senaryolarının gösterilebildiği önemli bir alandır.
+
+\subsubsection{secure\_api Klasörü}
+
+secure\_api klasörü, modern güvenlik mekanizmalarıyla güçlendirilmiş REST API ortamını temsil etmektedir. Bu bölümde, güvensiz ortamda yer alan temel işlevler korunmuş; ancak bu işlevlerin üzerine güvenlik katmanları eklenmiştir. Böylece kullanıcılar aynı işlemlerin güvenli mimaride nasıl yürütüldüğünü inceleyebilmektedir.
+
+secure\_api/app.py dosyası güvenli Flask uygulamasının başlangıç noktasıdır. Bu dosyada Flask uygulaması başlatılırken güvenlik bileşenleri de sisteme entegre edilir. CORS ayarları, rate limiting mekanizması, WAF kontrolleri, JWT doğrulama süreçleri ve Blueprint bağlantıları bu yapı içerisinde yönetilir. Güvenli uygulama, istemcilerden gelen istekleri doğrudan işlemek yerine önce güvenlik kontrollerinden geçirir.
+
+secure\_api/routes\_auth.py dosyası JWT destekli authentication işlemlerini içerir. Kullanıcı başarılı şekilde giriş yaptığında backend tarafından imzalanmış bir JWT token üretilir. Bu token, kullanıcının sonraki isteklerde kimliğini doğrulamak için kullanılır. Ayrıca güvenli ortamda kullanıcı parolalarının düz metin olarak saklanmaması ve bcrypt ile hashlenmesi gibi güvenlik önlemleri uygulanır.
+
+secure\_api/routes\_users.py dosyası RBAC korumalı kullanıcı işlemlerini içerir. Bu bölümde kullanıcı ve yönetici rolleri birbirinden ayrılır. Normal kullanıcılar yalnızca kendilerine izin verilen işlemleri gerçekleştirebilirken, admin kullanıcılar daha geniş yönetim yetkilerine sahip olabilir. Böylece Broken Access Control ve yetkisiz erişim riskleri azaltılır.
+
+secure\_api/routes\_items.py dosyası WAF ve rate limit korumalı CRUD işlemlerini içerir. Bu modül üzerinden gelen veri işleme istekleri, güvenlik filtrelerinden geçirilir. Zararlı SQL Injection veya XSS payload’ları WAF tarafından engellenebilir. Aynı zamanda rate limiting mekanizması, kısa sürede çok fazla istek gönderilmesini sınırlandırarak brute force ve spam saldırılarına karşı koruma sağlar.
+
+\subsubsection{common Klasörü}
+
+common klasörü, hem güvenli hem de güvensiz API ortamları tarafından ortak kullanılan yapıların bulunduğu bölümdür. Bu klasörün amacı kod tekrarını azaltmak ve temel sistem bileşenlerini merkezi bir yerde toplamaktır.
+
+common/config.py dosyası sistem yapılandırmalarını içerir. Veritabanı bağlantı adresi, secret key, debug ayarları ve environment variable kullanımı bu dosyada yönetilebilir. Özellikle güvenli ortamda gizli bilgilerin doğrudan kod içine yazılmaması, environment variable üzerinden okunması güvenli yapılandırma prensibinin bir parçasıdır.
+
+common/db.py dosyası SQLAlchemy veritabanı bağlantısını tanımlar. Flask uygulamaları bu ortak veritabanı nesnesini kullanarak veritabanı işlemlerini gerçekleştirir. Böylece veritabanı bağlantı yapısı tek bir noktadan yönetilir.
+
+common/models.py dosyası SQLAlchemy model tanımlarını içerir. Kullanıcı ve item gibi veritabanı tabloları bu dosyada Python sınıfları olarak tanımlanır. Bu modeller hem güvenli hem de güvensiz API ortamlarında kullanılabilir. Böylece iki ortam aynı veri yapıları üzerinde çalışarak daha sağlıklı karşılaştırma yapılmasına imkân verir.
+
+\subsubsection{docker-compose.yml Dosyası}
+
+docker-compose.yml dosyası, projenin Docker ortamında çalıştırılmasını sağlayan temel yapılandırma dosyasıdır. Bu dosya sayesinde güvenli API, güvensiz API ve gerekli servisler tek komutla ayağa kaldırılabilir.
+
+Docker Compose kullanımı sistemin taşınabilirliğini artırır. Kullanıcılar farklı bilgisayarlarda aynı ortamı tekrar kurabilir. Bu da eğitim amaçlı laboratuvarlarda büyük avantaj sağlar. Ayrıca güvenli ve güvensiz servislerin ayrı çalışma alanlarında yönetilmesi, sistemin daha kontrollü ve düzenli çalışmasına yardımcı olur.
+
+\subsubsection{requirements.txt Dosyası}
+
+requirements.txt dosyası, projenin ihtiyaç duyduğu Python kütüphanelerini içerir. Flask, SQLAlchemy, Flask-CORS, Flask-Limiter, bcrypt, PyJWT ve python-dotenv gibi bağımlılıklar bu dosya üzerinden kurulabilir.
+
+Bu dosyanın bulunması, projenin kurulabilirliğini kolaylaştırır. Kullanıcılar gerekli bağımlılıkları tek komutla yükleyebilir:
+
+\begin{lstlisting}
+pip install -r requirements.txt
+\end{lstlisting}
+
+\subsubsection{Blueprint Mimarisi}
+
+Projede Flask Blueprint yapısı kullanılarak authentication işlemleri, kullanıcı yönetimi ve veri işleme senaryoları farklı route dosyaları içerisinde ayrıştırılmıştır. Bu mimari yaklaşım, backend kodunun tek bir dosyada karmaşık hale gelmesini engeller.
+
+Blueprint yapısının projeye sağladığı avantajlar şunlardır:
+
+\begin{itemize}[leftmargin=*]
+    \item Kod okunabilirliğini artırır.
+    \item Modüller arası sorumluluk ayrımı sağlar.
+    \item Auth, users ve items işlemlerini birbirinden ayırır.
+    \item Yeni endpoint eklemeyi kolaylaştırır.
+    \item Güvenli ve güvensiz API ortamlarının karşılaştırılmasını kolaylaştırır.
+    \item Test ve hata ayıklama süreçlerini daha yönetilebilir hale getirir.
+    \item Yeni güvenlik senaryolarının sisteme eklenmesini kolaylaştırır.
+\end{itemize}
+
+Bu yapı sayesinde örneğin yalnızca authentication mekanizması üzerinde değişiklik yapılmak istendiğinde routes\_auth.py dosyası düzenlenebilir. Kullanıcı yönetimiyle ilgili bir değişiklik yapılacağında routes\_users.py, CRUD veya saldırı senaryolarıyla ilgili bir değişiklik yapılacağında ise routes\_items.py üzerinde çalışılır. Bu da projeyi daha profesyonel ve sürdürülebilir hale getirir.
+
+Sonuç olarak API Fortress’in dosya yapısı, saldırı ve savunma ortamlarını açık şekilde ayıran, ortak bileşenleri merkezi olarak yöneten ve Flask Blueprint mimarisiyle modülerliği destekleyen bir yapıda tasarlanmıştır. Bu organizasyon sayesinde sistemin bakım yapılabilirliği artmış, yeni güvenlik senaryolarının eklenmesi kolaylaşmış ve kullanıcıların güvenli-güvensiz API farklarını daha net biçimde analiz edebilmesi sağlanmıştır.
+
+\subsection{Veritabanı Tasarımı}
+\label{veritaban-tasar-m}
+
+Veritabanı katmanında SQLAlchemy ORM yapısı kullanılmıştır. ORM yaklaşımı sayesinde veritabanı işlemleri doğrudan SQL sorguları yerine Python nesneleri üzerinden gerçekleştirilebilmektedir. Bu yapı kod okunabilirliğini artırırken aynı zamanda veritabanı yönetimini daha güvenli hale getirmektedir.
+
+Temel veri modeli olan User sınıfı aşağıdaki alanları içermektedir:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{3.5cm}|L{3.5cm}|}
+\hline
+\textbf{Alan} & \textbf{Açıklama} \\
+\hline
+id & Birincil anahtar (otomatik artımlı tamsayı) \\
+\hline
+username & Kullanıcı adı (benzersiz, zorunlu) \\
+\hline
+email & E-posta adresi (benzersiz, zorunlu) \\
+\hline
+password & Bcrypt ile hashlenmiş parola \\
+\hline
+role & Kullanıcı rolü: 'user' veya 'admin' \\
+\hline
+created\_at & Kayıt oluşturulma zaman damgası \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{REST API Endpoint Yapısı}
+\label{rest-api-endpoint-yap-s}
+
+Sistemdeki temel endpoint'ler ve bunların HTTP metodları aşağıdaki tabloda özetlenmektedir:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{3.5cm}|L{3.5cm}|L{3.5cm}|}
+\hline
+\textbf{Endpoint} & \textbf{Metod} & \textbf{Açıklama} \\
+\hline
+/api/auth/register & POST & Yeni kullanıcı kaydı \\
+\hline
+/api/auth/login & POST & Kullanıcı girişi ve token üretimi \\
+\hline
+/api/users & GET & Tüm kullanıcıları listeleme (admin) \\
+\hline
+/api/users/<id> & GET & Belirli kullanıcıyı görüntüleme \\
+\hline
+/api/users/<id> & PUT & Kullanıcı bilgilerini güncelleme \\
+\hline
+/api/users/<id> & DELETE & Kullanıcı silme (admin) \\
+\hline
+/api/items & GET/POST & Öğe listeleme ve ekleme \\
+\hline
+/api/items/<id> & PUT/DELETE & Öğe güncelleme ve silme \\
+\hline
+\end{tabular}
+\end{table}
+
+
+\clearpage

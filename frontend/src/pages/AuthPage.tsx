@@ -27,9 +27,9 @@ export default function AuthPage() {
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-4 py-10 sm:gap-12 sm:px-6 sm:py-14">
         <header className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-fortress-accent">
-              Bitirme projesi · API Fortress
-            </p>
+            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-fortress-accent">
+              API Fortress
+            </h4>
 
             <h1 className="mt-3 text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-[2.35rem] lg:leading-tight">
               Çift yüzlü REST API güvenlik laboratuvarı
@@ -90,16 +90,6 @@ export default function AuthPage() {
                 <p className="mt-2 text-sm leading-relaxed text-slate-400">
                   Referans savunma modeli: giriş doğrulama, nesne düzeyinde yetki ve veri minimizasyonu
                   gibi kontrollerle aynı rotalar daha güvenli şekilde sunulur.
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-slate-700/80 bg-fortress-900/40 p-5">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-200">
-                  Platform oturumu
-                </h2>
-                <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                  Hesap oluşturma ve giriş Secure API ile yapılır. Token tarayıcıda saklanır; lab modu
-                  değişse bile oturum düşmez.
                 </p>
               </div>
             </div>
