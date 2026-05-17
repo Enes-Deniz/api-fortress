@@ -5,6 +5,8 @@ from services.common.auth_utils import get_current_user
 
 users_bp = Blueprint("users_bp", __name__)
 
+DEMO_ADMIN_EMAIL = "admin@fortress.local"
+
 
 @users_bp.get("/me")
 def me():
@@ -43,9 +45,15 @@ def delete_user_by_id(user_id):
     if not current.is_admin:
         return jsonify({"error": "forbidden"}), 403
 
+    if current.id == user_id:
+        return jsonify({"error": "cannot delete own account"}), 403
+
     u = db.session.get(User, user_id)
     if not u:
         return jsonify({"error": "not found"}), 404
+
+    if u.email == DEMO_ADMIN_EMAIL:
+        return jsonify({"error": "demo admin cannot be deleted"}), 403
 
     db.session.delete(u)
     db.session.commit()

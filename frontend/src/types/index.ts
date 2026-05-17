@@ -68,3 +68,19 @@ export interface HealthResponse {
   status: string;
   service: string;
 }
+
+/** GET /progress/me ve POST /progress/complete yanıtı */
+export interface ProgressMeResponse {
+  completed: string[];
+}
+
+/** GET /admin/users-progress öğesi */
+export interface AdminUserProgress {
+  id: number;
+  email: string;
+  is_admin: boolean;
+  completed_tasks: string[];
+  completed_count: number;
+  total_count: number;
+  completed_at: Record<string, string>;
+}

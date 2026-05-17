@@ -9,6 +9,9 @@ export const STORAGE_KEYS = {
   accessToken: "api-fortress-access-token",
 } as const;
 
+/** Secure API demo admin — silinemez */
+export const DEMO_ADMIN_EMAIL = "admin@fortress.local";
+
 export function readAccessToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(STORAGE_KEYS.accessToken);

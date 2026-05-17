@@ -13,6 +13,8 @@ from services.common.models import User
 from services.api_secure.routes_auth import auth_bp
 from services.api_secure.routes_users import users_bp
 from services.api_secure.routes_items import items_bp
+from services.api_secure.routes_progress import progress_bp
+from services.api_secure.routes_admin import admin_bp
 
 load_dotenv()
 
@@ -93,6 +95,8 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(users_bp, url_prefix="/users")
     app.register_blueprint(items_bp, url_prefix="/items")
+    app.register_blueprint(progress_bp, url_prefix="/progress")
+    app.register_blueprint(admin_bp, url_prefix="/admin")
 
     with app.app_context():
         db.create_all()

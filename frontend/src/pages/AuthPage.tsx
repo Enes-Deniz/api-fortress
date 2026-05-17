@@ -72,22 +72,22 @@ export default function AuthPage() {
 
         {!showAuthPanel ? (
           <section className="space-y-8 rounded-2xl border border-slate-800/80 bg-fortress-950/25 p-6 sm:p-10">
-            <div className="grid gap-8 lg:grid-cols-3">
-              <div className="rounded-xl border border-amber-500/20 bg-amber-950/10 p-5">
+            <div className="mx-auto flex w-full max-w-3xl flex-col items-stretch justify-center gap-6 sm:flex-row">
+              <div className="flex min-h-[11rem] min-w-0 flex-1 basis-0 flex-col rounded-xl border border-amber-500/20 bg-amber-950/10 p-5">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-200/90">
                   Insecure API
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">
                   Eğitim amaçlı zayıf uygulama. Kayıt, giriş ve kullanıcı uçlarında kasıtlı hatalar
                   bulunur; gerçek üretim sistemlerinde asla taklit edilmemelidir.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-sky-500/20 bg-sky-950/10 p-5">
+              <div className="flex min-h-[11rem] min-w-0 flex-1 basis-0 flex-col rounded-xl border border-sky-500/20 bg-sky-950/10 p-5">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-sky-200/90">
                   Secure API
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">
                   Referans savunma modeli: giriş doğrulama, nesne düzeyinde yetki ve veri minimizasyonu
                   gibi kontrollerle aynı rotalar daha güvenli şekilde sunulur.
                 </p>
@@ -103,11 +103,7 @@ export default function AuthPage() {
                 Giriş / Kayıt ile devam et
               </button>
 
-              <p className="max-w-md text-center text-xs text-slate-500 sm:text-left">
-                Aynı işlemi üst menüdeki{" "}
-                <strong className="font-medium text-slate-400">Giriş / Kayıt</strong> düğmesiyle de
-                başlatabilirsiniz.
-              </p>
+              
             </div>
           </section>
         ) : null}

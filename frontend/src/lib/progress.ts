@@ -58,3 +58,19 @@ export function isTaskUnlocked(taskId: string, completedIds: readonly string[]):
 export function isTaskCompleted(taskId: string, completedIds: readonly string[]): boolean {
   return completedIds.includes(taskId);
 }
+
+/** localStorage + backend listesini birleştirir, learning path sırasını korur */
+export function mergeCompletedWithRemote(
+  userKey: string,
+  remoteCompleted: readonly string[]
+): string[] {
+  const local = readCompletedTaskIds(userKey);
+  const mergedSet = new Set([...local, ...remoteCompleted]);
+  const ordered = LEARNING_PATH_ORDER.filter((id) => mergedSet.has(id));
+  const extras = [...mergedSet].filter(
+    (id) => !(LEARNING_PATH_ORDER as readonly string[]).includes(id)
+  );
+  const merged = [...ordered, ...extras];
+  persistCompletedTaskIds(userKey, merged);
+  return merged;
+}

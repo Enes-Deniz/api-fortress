@@ -6,14 +6,18 @@ import DashboardSummaryCards from "@/components/dashboard/DashboardSummaryCards"
 import CtfTaskGrid from "@/components/dashboard/CtfTaskGrid";
 import CtfTaskDetailModal from "@/components/dashboard/CtfTaskDetailModal";
 import { useApiMode } from "@/hooks/useApiMode";
-import { fetchHealth, getInsecureApiBase, getSecureApiBase, getJson } from "@/services/http";
+import { fetchHealth, getInsecureApiBase, getSecureApiBase, getJson, postJson } from "@/services/http";
 import {
   ROUTES,
   readAccessToken,
   clearAccessToken,
 } from "@/lib/constants";
-import { markTaskCompleted, readCompletedTaskIds } from "@/lib/progress";
-import type { CtfTask, HealthResponse, UserMeResponse } from "@/types";
+import {
+  markTaskCompleted,
+  mergeCompletedWithRemote,
+  readCompletedTaskIds,
+} from "@/lib/progress";
+import type { CtfTask, HealthResponse, ProgressMeResponse, UserMeResponse } from "@/types";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -37,13 +41,54 @@ export default function DashboardPage() {
     navigate(ROUTES.auth, { replace: true });
   }, [navigate]);
 
-  const handleTaskCompleted = useCallback((taskId: string) => {
-    if (!userProgressKey) return;
-    setCompletedTaskIds(markTaskCompleted(userProgressKey, taskId));
-  }, [userProgressKey]);
+  const handleTaskCompleted = useCallback(
+    (taskId: string) => {
+      if (!userProgressKey) return;
+      const next = markTaskCompleted(userProgressKey, taskId);
+      setCompletedTaskIds(next);
+
+      const token = readAccessToken();
+      if (!token) return;
+
+      const platformApiBase = getSecureApiBase();
+      postJson<ProgressMeResponse>(platformApiBase, "/progress/complete", { task_id: taskId }, { token })
+        .then((data) => {
+          setCompletedTaskIds(mergeCompletedWithRemote(userProgressKey, data.completed ?? []));
+        })
+        .catch(() => {
+          /* localStorage fallback — sessiz */
+        });
+    },
+    [userProgressKey]
+  );
 
   useEffect(() => {
-    setCompletedTaskIds(readCompletedTaskIds(userProgressKey));
+    if (!userProgressKey) {
+      setCompletedTaskIds([]);
+      return;
+    }
+
+    const local = readCompletedTaskIds(userProgressKey);
+    setCompletedTaskIds(local);
+
+    const token = readAccessToken();
+    if (!token) return;
+
+    const platformApiBase = getSecureApiBase();
+    let cancelled = false;
+
+    getJson<ProgressMeResponse>(platformApiBase, "/progress/me", { token })
+      .then((data) => {
+        if (cancelled) return;
+        setCompletedTaskIds(mergeCompletedWithRemote(userProgressKey, data.completed ?? []));
+      })
+      .catch(() => {
+        /* localStorage fallback */
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [userProgressKey]);
 
   useEffect(() => {

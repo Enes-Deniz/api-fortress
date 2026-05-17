@@ -58,14 +58,28 @@ function errorFromBody(data: unknown, fallback: string): string {
   return fallback;
 }
 
+export type PostJsonOptions = {
+  token?: string | null;
+};
+
 export async function postJson<TResponse>(
   baseUrl: string,
   path: string,
-  body: unknown
+  body: unknown,
+  options?: PostJsonOptions
 ): Promise<TResponse> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  };
+  const token = options?.token;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const res = await fetch(joinUrl(baseUrl, path), {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers,
     body: JSON.stringify(body),
   });
 
@@ -103,6 +117,32 @@ export async function getJson<TResponse>(
   }
 
   return data as TResponse;
+}
+
+export type DeleteJsonOptions = {
+  token?: string | null;
+};
+
+export async function deleteJson<TResponse>(
+  baseUrl: string,
+  path: string,
+  options?: DeleteJsonOptions
+): Promise<TResponse> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  const token = options?.token;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(joinUrl(baseUrl, path), { method: "DELETE", headers });
+  const text = await res.text();
+  const data = text ? parseJsonBody(text) : null;
+
+  if (!res.ok) {
+    throw new Error(errorFromBody(data, `İstek başarısız (${res.status})`));
+  }
+
+  return (data ?? {}) as TResponse;
 }
 
 /** Genel sağlık kontrolü — kimlik gerektirmez */
